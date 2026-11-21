@@ -1,4 +1,36 @@
-*.log
+
+# Git
+.git/
+.gitignore~
+
+# Environment secrets
+.env
+.env.*
+!.env.example
 *.pem
+*.key
+secrets/
+
+# Build outputs
+build/
+dist/
+out/
+target/
+.gradle/
+.cache/
+
+# Logs
+*.log
+logs/
+
+# Editor and operating-system files
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Local data and container state
+data/
+docker-data/
