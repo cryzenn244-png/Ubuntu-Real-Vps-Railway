@@ -1,4 +1,0 @@
-Miracle Cloud VM is a redesigned project informed by the public repository:
-https://github.com/dxdgame/docker-ubuntu-desktop
-
-The upstream repository identifies itself as MIT licensed, copyright (c) 2023 Takahashi Akari. This project does not copy the upstream Dockerfile verbatim; it retains attribution and is distributed under the MIT License. Third-party software and trademarks remain the property of their respective owners.
