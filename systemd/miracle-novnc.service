@@ -1,0 +1,18 @@
+[Unit]
+Description=Miracle Cloud VM WebSocket gateway
+Requires=miracle-vnc.service
+After=miracle-vnc.service
+
+[Service]
+Type=simple
+EnvironmentFile=/run/miracle/environment
+ExecStart=/opt/miracle/scripts/start-novnc.sh
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+KillMode=mixed
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

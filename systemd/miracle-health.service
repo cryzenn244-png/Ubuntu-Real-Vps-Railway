@@ -1,0 +1,16 @@
+[Unit]
+Description=Miracle Cloud VM readiness endpoint
+Requires=miracle-setup.service
+After=miracle-setup.service
+
+[Service]
+Type=simple
+EnvironmentFile=/run/miracle/environment
+ExecStart=/opt/miracle/scripts/start-health-server.sh
+Restart=on-failure
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
