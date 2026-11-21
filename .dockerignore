@@ -1,0 +1,10 @@
+
+.git
+.gradle
+build
+out
+*.log
+.env
+.env.*
+*.pem
+*.key
