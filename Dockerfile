@@ -1,55 +1,51 @@
+
 FROM --platform=linux/amd64 ubuntu:22.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    HOME=/root \
+    USER=root \
+    VNC_PORT=5901 \
+    VNC_GEOMETRY=1440x900 \
+    VNC_DEPTH=24
 
-RUN apt update -y && \
-    apt install --no-install-recommends -y \
-    xfce4 \
-    xfce4-goodies \
-    tigervnc-standalone-server \
-    novnc \
-    websockify \
-    sudo \
-    xterm \
-    init \
-    systemd \
-    snapd \
-    vim \
-    net-tools \
-    curl \
-    wget \
-    git \
-    tzdata
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN apt update -y && \
-    apt install -y \
-    dbus-x11 \
-    x11-utils \
-    x11-xserver-utils \
-    x11-apps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xfce4 xfce4-goodies \
+    tigervnc-standalone-server novnc websockify \
+    dbus-x11 x11-utils x11-xserver-utils x11-apps \
+    sudo xterm vim nano curl wget git ca-certificates \
+    net-tools iproute2 iputils-ping procps psmisc \
+    firefox xubuntu-icon-theme \
+    fonts-dejavu-core fonts-liberation \
+    python3 util-linux tini \
+    uidmap dbus-user-session \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt install -y software-properties-common
+# Install Docker Engine from Docker's official Ubuntu repository.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl \
+    && install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+       -o /etc/apt/keyrings/docker.asc \
+    && chmod a+r /etc/apt/keyrings/docker.asc \
+    && echo \
+       "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu jammy stable" \
+       > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+       docker-ce docker-ce-cli containerd.io \
+       docker-buildx-plugin docker-compose-plugin \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN add-apt-repository ppa:mozillateam/ppa -y
+RUN mkdir -p /data /root/.vnc /run/dbus /var/lib/docker \
+    && touch /root/.Xauthority \
+    && chmod 700 /root/.vnc
 
-RUN echo 'Package: *' >> /etc/apt/preferences.d/mozilla-firefox
-RUN echo 'Pin: release o=LP-PPA-mozillateam' >> /etc/apt/preferences.d/mozilla-firefox
-RUN echo 'Pin-Priority: 1001' >> /etc/apt/preferences.d/mozilla-firefox
-RUN echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:jammy";' > /etc/apt/apt.conf.d/51unattended-upgrades-firefox
+COPY entrypoint.sh /usr/local/bin/miracle-entrypoint
+RUN chmod 755 /usr/local/bin/miracle-entrypoint
 
-RUN apt update -y && \
-    apt install -y firefox
+EXPOSE 6080 5901
 
-RUN apt update -y && \
-    apt install -y xubuntu-icon-theme
-
-RUN touch /root/.Xauthority
-
-EXPOSE 5901
-EXPOSE 6080
-
-CMD bash -c '\
-vncserver -localhost no -SecurityTypes None -geometry 1024x768 --I-KNOW-THIS-IS-INSECURE && \
-openssl req -new -subj "/C=JP" -x509 -days 365 -nodes -out self.pem -keyout self.pem && \
-websockify -D --web=/usr/share/novnc/ --cert=self.pem 6080 localhost:5901 && \
-tail -f /dev/null'
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/miracle-entrypoint"]
