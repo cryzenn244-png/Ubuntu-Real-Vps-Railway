@@ -1,47 +1,22 @@
 
-# Dockerfile — Ubuntu 22.04 desktop, TigerVNC, noVNC, Docker-in-Docker
+# Dockerfile — Ubuntu 22.04, XFCE, VNC, noVNC and Docker-in-Docker
 FROM --platform=linux/amd64 ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV USER=root
 ENV HOME=/root
+ENV USER=root
 ENV NOVNC_PORT=6080
 ENV DOCKER_HOST=unix:///var/run/docker.sock
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    bash \
-    tini \
-    ca-certificates \
-    curl \
-    wget \
-    gnupg \
-    lsb-release \
-    dbus \
-    dbus-x11 \
-    xauth \
-    x11-xserver-utils \
-    x11-utils \
-    xterm \
-    xfce4 \
-    xfce4-goodies \
-    xubuntu-icon-theme \
-    tigervnc-standalone-server \
-    tigervnc-common \
-    novnc \
-    websockify \
-    sudo \
-    git \
-    vim \
-    nano \
-    procps \
-    iproute2 \
-    iputils-ping \
-    net-tools \
-    openssl \
-    tzdata \
-    ca-certificates \
+    bash tini ca-certificates curl wget gnupg lsb-release \
+    dbus dbus-x11 xauth x11-xserver-utils x11-utils xterm \
+    xfce4 xfce4-goodies xubuntu-icon-theme \
+    tigervnc-standalone-server tigervnc-common \
+    novnc websockify sudo git vim nano \
+    procps iproute2 iputils-ping net-tools openssl tzdata \
     && install -m 0755 -d /etc/apt/keyrings \
     && curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
        -o /etc/apt/keyrings/docker.asc \
@@ -50,11 +25,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
        > /etc/apt/sources.list.d/docker.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-       docker-ce \
-       docker-ce-cli \
-       containerd.io \
-       docker-buildx-plugin \
-       docker-compose-plugin \
+       docker-ce docker-ce-cli containerd.io \
+       docker-buildx-plugin docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p \
@@ -67,12 +39,17 @@ RUN mkdir -p \
     && chmod 1777 /tmp/.X11-unix
 
 COPY entrypoint.sh /usr/local/bin/miracle-entrypoint
+COPY entrypoint.bash /usr/local/bin/entrypoint.bash
 
-RUN sed -i 's/\r$//' /usr/local/bin/miracle-entrypoint \
-    && chmod 0755 /usr/local/bin/miracle-entrypoint
+# Normalize Windows line endings and make both scripts executable.
+RUN sed -i 's/\r$//' \
+      /usr/local/bin/miracle-entrypoint \
+      /usr/local/bin/entrypoint.bash \
+    && chmod 0755 \
+      /usr/local/bin/miracle-entrypoint \
+      /usr/local/bin/entrypoint.bash
 
-EXPOSE 5901
-EXPOSE 6080
+EXPOSE 5901 6080
 
 STOPSIGNAL SIGTERM
 
